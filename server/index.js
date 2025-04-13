@@ -17,7 +17,10 @@ const interval = setInterval(() => {
     data = { message: `Notification ${count+1}`, timestamp: Date.now()};
 }, 5000);
 
-//app.use(cors());
+app.use(cors());
+
+app.use(express.json());
+const notifications = [];
 
 // app.get('/', (req, res) => {
 //     res.send('Welcome to Notifier API')
@@ -43,11 +46,30 @@ const interval = setInterval(() => {
 //     }
 // })
 
+app.post('/webhook/:source', (req, res) => {
+    const { source } = req.params;
+    const {eventType, message} = req.body;
+
+    const notification = {
+        source,
+        eventType, 
+        message,
+        timestamp: Date.now()
+    };
+
+    notifications.push(notification);
+
+    console.log('Webhook received from: ', source);
+    console.log(notifications);
+
+    res.status(200).json({ success: true})
+})
+
 server.on('upgrade', (req, socket, head) => {
     console.log('🧩 Upgrade request to:', req.url);
     const pathname = req.url.split('?')[0];
 
-    if(pathname === '/events'){
+    if(pathname === '/ws'){
         wsServer.handleUpgrade(req, socket, head, (wss) => {
             wsServer.emit('connection', wss, req);
         });
@@ -75,6 +97,29 @@ wsServer.on('connection', (wss, req) => {
         
     })
     
+})
+
+app.get('/events', (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
+
+    const sendEvent = () => {
+        const data = {
+            message: 'New alert from server',
+            timestamp: Date.now(),
+        }
+        res.write(`data: ${JSON.stringify(data)}\n\n`);
+    };
+    const intervalID = setInterval(sendEvent, 5000);
+
+    req.on('close', () => {
+        clearInterval(intervalID);
+        res.end();
+        console.log('Client disconnected')
+    })
+
 })
 
 server.listen(PORT, () => {
