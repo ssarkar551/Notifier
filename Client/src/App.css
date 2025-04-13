@@ -1,0 +1,38 @@
+/* #root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+} */
+
+.navbar{
+  display: flex;
+}
+
+.navbar nav ul{
+  display: flex;
+  gap: 3em;
+  /* justify-content: space-between; */
+}
+
+li{
+  display: block;
+}
+
+li:hover{
+  text-decoration: underline;
+  cursor: pointer;
+  color: gray;
+}
+
+.home{
+  display: flex;
+  justify-content: center;
+}
+
+a.active{
+  color: blue;
+}
+
+a{
+  color: white
+}
